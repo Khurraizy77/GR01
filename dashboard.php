@@ -88,31 +88,111 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCMS Dashboard</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Your custom CSS -->
+    <link rel="stylesheet" href="./css/app.css">
+
     <style>
-        body, html { height: 100%; background-color: #f3e8ff; font-family: sans-serif; overflow-x: hidden; }
-        .wrapper { display: flex; width: 100%; align-items: stretch; height: 100vh; }
-        #sidebar { min-width: 260px; max-width: 260px; background-color: #6b21a8; color: #fff; transition: all 0.3s; display: flex; flex-direction: column; justify-content: space-between; }
-        #sidebar.active { margin-left: -260px; }
-        .sidebar-header { padding: 25px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .admin-profile { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
-        .admin-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); }
-        #sidebar ul a { color: rgba(255,255,255,0.7); text-decoration: none; display: flex; align-items: center; gap: 15px; font-size: 1.1rem; padding: 12px 25px; transition: 0.2s; }
-        #sidebar ul a:hover, #sidebar ul a.active { color: #fff; background: rgba(255, 255, 255, 0.1); border-radius: 8px; margin: 0 10px; }
-        #content { width: 100%; overflow-y: auto; }
-        .navbar-custom { background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); padding: 15px 20px; }
-        .metric-card { border: none; border-radius: 15px; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); height: 100%; }
-        .metric-icon-box { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
-        .viz-card { border: none; border-radius: 15px; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); padding: 20px; height: 100%; text-align: center; }
-        .viz-title { font-weight: bold; color: #000; margin-bottom: 15px; font-size: 1.1rem; }
-        .star-rating { color: #ffca28; font-size: 1.2rem; }
-        .gender-icon { font-size: 4.5rem; }
-        .gender-female { color: #ff69b4; }
-        .gender-male { color: #1e90ff; }
+        body, html {
+            height: 100%;
+            background-color: #f3e8ff;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        #sidebar {
+            min-width: 260px;
+            max-width: 260px;
+            background-color: #6b21a8;
+            color: #fff;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        #sidebar.active {
+            margin-left: -260px;
+        }
+
+        #content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .navbar-custom {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 15px 20px;
+        }
+
+        .metric-card {
+            border: none;
+            border-radius: 15px;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+
+        .metric-icon-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .viz-card {
+            border: none;
+            border-radius: 15px;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            height: 100%;
+            text-align: center;
+        }
+
+        .viz-title {
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .star-rating {
+            color: #ffca28;
+            font-size: 1.2rem;
+        }
+
+        .gender-icon {
+            font-size: 4.5rem;
+        }
+
+        .gender-female {
+            color: #ff69b4;
+        }
+
+        .gender-male {
+            color: #1e90ff;
+        }
     </style>
-    <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 
