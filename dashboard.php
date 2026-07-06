@@ -18,11 +18,15 @@ $failed_abr = 0;
 $male_cbr = 0;
 $female_cbr = 0;
 
-// Expanded to dynamically catch and track your new student class allocations
 $group_counts = [
-    'GR01' => 0, 'GR02' => 0, 'GR03' => 0,
-    'GR04' => 0, 'GR05' => 0, 'GR06' => 0,
-    'GR08' => 0, 'G1S2' => 0
+    'GR01' => 0,
+    'GR02' => 0,
+    'GR03' => 0,
+    'GR04' => 0,
+    'GR05' => 0,
+    'GR06' => 0,
+    'GR08' => 0,
+    'G1S2' => 0
 ];
 
 $top_scorers = [];
@@ -30,47 +34,62 @@ $top_scorers = [];
 try {
     $metrics_query = "SELECT COUNT(*) as total FROM participants";
     $res = mysqli_query($conn, $metrics_query);
-    if ($row = mysqli_fetch_assoc($res)) { $total_participants = $row['total']; }
+    if ($row = mysqli_fetch_assoc($res)) {
+        $total_participants = (int)$row['total'];
+    }
 
     $eval_query = "SELECT COUNT(*) as total FROM evaluations";
     $res = mysqli_query($conn, $eval_query);
-    if ($row = mysqli_fetch_assoc($res)) { $evaluated_count = $row['total']; }
+    if ($row = mysqli_fetch_assoc($res)) {
+        $evaluated_count = (int)$row['total'];
+    }
 
-    $to_evaluate_count = $total_participants - $evaluated_count;
+    $to_evaluate_count = max(0, $total_participants - $evaluated_count);
 
     $abr_query = "SELECT abr_status, COUNT(*) as cnt FROM evaluations GROUP BY abr_status";
     $res = mysqli_query($conn, $abr_query);
     while ($row = mysqli_fetch_assoc($res)) {
-        if ($row['abr_status'] === 'PASS') $passed_abr = $row['cnt'];
-        if ($row['abr_status'] === 'FAIL') $failed_abr = $row['cnt'];
+        if (strtoupper($row['abr_status']) === 'PASS') {
+            $passed_abr = (int)$row['cnt'];
+        }
+        if (strtoupper($row['abr_status']) === 'FAIL') {
+            $failed_abr = (int)$row['cnt'];
+        }
     }
 
     $cbr_query = "SELECT cbr_gender, COUNT(*) as cnt FROM evaluations GROUP BY cbr_gender";
     $res = mysqli_query($conn, $cbr_query);
     while ($row = mysqli_fetch_assoc($res)) {
-        if (strtoupper($row['cbr_gender']) === 'MALE') $male_cbr = $row['cnt'];
-        if (strtoupper($row['cbr_gender']) === 'FEMALE') $female_cbr = $row['cnt'];
+        $gender = strtoupper(trim($row['cbr_gender']));
+        if ($gender === 'MALE') {
+            $male_cbr = (int)$row['cnt'];
+        }
+        if ($gender === 'FEMALE') {
+            $female_cbr = (int)$row['cnt'];
+        }
     }
 
     $group_query = "SELECT student_group, COUNT(*) as cnt FROM participants GROUP BY student_group";
     $res = mysqli_query($conn, $group_query);
     while ($row = mysqli_fetch_assoc($res)) {
-        $g = strtoupper($row['student_group']);
+        $g = strtoupper(trim($row['student_group']));
         if (array_key_exists($g, $group_counts)) {
-            $group_counts[$g] = $row['cnt'];
+            $group_counts[$g] = (int)$row['cnt'];
         }
     }
 
-    $top_query = "SELECT p.name, e.score FROM participants p 
-                  JOIN evaluations e ON p.matric_no = e.matric_no 
-                  WHERE e.score > 0.00
-                  ORDER BY e.score DESC LIMIT 4";
+    $top_query = "SELECT p.name, e.score
+                  FROM participants p
+                  JOIN evaluations e ON p.matric_no = e.matric_no
+                  WHERE e.score > 0
+                  ORDER BY e.score DESC
+                  LIMIT 4";
     $res = mysqli_query($conn, $top_query);
     while ($row = mysqli_fetch_assoc($res)) {
         $top_scorers[] = $row;
     }
 
-} catch (mysqli_sql_exception $e) {
+} catch (Throwable $e) {
     error_log("Dashboard UI Metrics Error: " . $e->getMessage());
 }
 
@@ -89,21 +108,14 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCMS Dashboard</title>
 
-    <!-- Bootstrap CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Your custom CSS -->
     <link rel="stylesheet" href="./css/app.css">
 
     <style>
         body, html {
-            height: 100%;
+            min-height: 100%;
             background-color: #f3e8ff;
             font-family: Arial, sans-serif;
             overflow-x: hidden;
@@ -192,16 +204,27 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
         .gender-male {
             color: #1e90ff;
         }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                margin-left: -260px;
+                position: fixed;
+                min-height: 100vh;
+                z-index: 999;
+            }
+
+            #sidebar.active {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
-    
-    <!-- FETCH EXTERNAL SIDEBAR WORKSPACE LAYER -->
-    <?php 
-        $current_page = 'dashboard.php'; 
-        include 'sidebar.php'; 
+    <?php
+        $current_page = 'dashboard.php';
+        include 'sidebar.php';
     ?>
 
     <div id="content">
@@ -209,6 +232,7 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
             <button type="button" id="sidebarCollapse" class="btn p-0 border-0 fs-4 text-secondary">
                 <i class="fa-solid fa-bars"></i>
             </button>
+
             <a href="logout.php" class="text-secondary text-decoration-none d-flex align-items-center gap-2 fs-5">
                 <i class="fa-solid fa-lock"></i> Logout
             </a>
@@ -225,7 +249,7 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
                                 <i class="fa-solid fa-user-group"></i>
                             </div>
                             <div class="text-end">
-                                <span class="text-muted small fw-bold d-block">Total participants</span>
+                                <span class="text-muted small fw-bold d-block">Total Participants</span>
                                 <h1 class="fw-bold m-0 text-dark"><?php echo $total_participants; ?></h1>
                                 <a href="participants.php" class="text-muted small text-decoration-none">See all ></a>
                             </div>
@@ -242,7 +266,7 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
                             <div class="text-end">
                                 <span class="text-muted small fw-bold d-block">Evaluated</span>
                                 <h1 class="fw-bold m-0 text-dark"><?php echo $evaluated_count; ?></h1>
-                                <a href="#" class="text-muted small text-decoration-none">See all ></a>
+                                <a href="participants.php" class="text-muted small text-decoration-none">See all ></a>
                             </div>
                         </div>
                     </div>
@@ -255,9 +279,9 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
                                 <i class="fa-solid fa-circle-xmark"></i>
                             </div>
                             <div class="text-end">
-                                <span class="text-muted small fw-bold d-block">To Evaluate:</span>
+                                <span class="text-muted small fw-bold d-block">To Evaluate</span>
                                 <h1 class="fw-bold m-0 text-dark"><?php echo $to_evaluate_count; ?></h1>
-                                <a href="#" class="text-muted small text-decoration-none">See all ></a>
+                                <a href="participants.php" class="text-muted small text-decoration-none">See all ></a>
                             </div>
                         </div>
                     </div>
@@ -273,33 +297,17 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
                                 <div class="py-4 text-center text-muted">
                                     No scored evaluations yet.
                                 </div>
-                            <?php elseif (false): ?>
-                                <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-light">
-                                    <span class="fs-5 fw-semibold text-secondary">Anieys</span>
-                                    <span class="star-rating">★★★★★</span>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-light">
-                                    <span class="fs-5 fw-semibold text-secondary">Nur</span>
-                                    <span class="star-rating">★★★★</span>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between py-2 border-bottom border-light">
-                                    <span class="fs-5 fw-semibold text-secondary">Ahmad</span>
-                                    <span class="star-rating">★★★★</span>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between py-2">
-                                    <span class="fs-5 fw-semibold text-secondary">Ali</span>
-                                    <span class="star-rating">★★★</span>
-                                </div>
                             <?php else: ?>
-                                <?php foreach($top_scorers as $index => $row): ?>
-                                    <div class="d-flex align-items-center justify-content-between py-2 <?php echo $index < count($top_scorers)-1 ? 'border-bottom border-light' : ''; ?>">
+                                <?php foreach ($top_scorers as $index => $row): ?>
+                                    <div class="d-flex align-items-center justify-content-between py-2 <?php echo $index < count($top_scorers) - 1 ? 'border-bottom border-light' : ''; ?>">
                                         <span class="fs-5 fw-semibold text-secondary"><?php echo htmlspecialchars($row['name']); ?></span>
                                         <span class="star-rating">
-                                            <?php 
-                                                if($row['score'] >= 80) echo '★★★★★';
-                                                elseif($row['score'] >= 60) echo '★★★★';
-                                                elseif($row['score'] >= 40) echo '★★★';
-                                                else echo '★★';
+                                            <?php
+                                                $score = (float)$row['score'];
+                                                if ($score >= 80) echo '★★★★★';
+                                                elseif ($score >= 60) echo '★★★★☆';
+                                                elseif ($score >= 40) echo '★★★☆☆';
+                                                else echo '★★☆☆☆';
                                             ?>
                                         </span>
                                     </div>
@@ -351,15 +359,19 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
 </div>
 
 <script>
-    document.getElementById('sidebarCollapse').addEventListener('click', function () {
-        document.getElementById('sidebar').classList.toggle('active');
-    });
+    const sidebarBtn = document.getElementById('sidebarCollapse');
+    const sidebar = document.getElementById('sidebar');
+
+    if (sidebarBtn && sidebar) {
+        sidebarBtn.addEventListener('click', function () {
+            sidebar.classList.toggle('active');
+        });
+    }
 
     const ctxGroup = document.getElementById('groupPerformanceChart').getContext('2d');
     new Chart(ctxGroup, {
         type: 'bar',
         data: {
-            // Updated dynamically to also chart and render your custom laboratory group indexes
             labels: ['GR01', 'GR02', 'GR03', 'GR04', 'GR05', 'GR06', 'GR08', 'G1S2'],
             datasets: [{
                 data: [
@@ -381,10 +393,19 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false }
+            },
             scales: {
-                x: { grid: { display: false }, border: { display: true }, ticks: { stepSize: 5 } },
-                y: { grid: { display: false }, border: { display: true } }
+                x: {
+                    grid: { display: false },
+                    border: { display: true },
+                    ticks: { stepSize: 1 }
+                },
+                y: {
+                    grid: { display: false },
+                    border: { display: true }
+                }
             }
         }
     });
@@ -410,6 +431,7 @@ $failed_pct = $abr_total > 0 ? round(($failed_abr / $abr_total) * 100) : 0;
         }
     });
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
