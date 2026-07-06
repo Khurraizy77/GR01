@@ -44,11 +44,33 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login - CCMS</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+    <!-- Your custom css -->
+    <link rel="stylesheet" href="./css/app.css">
+
     <style>
-        body, html { height: 100%; margin: 0; font-family: sans-serif; }
-        .left-side { background: url('images/leftbg.png') no-repeat center center; background-size: cover; color: white; }
-        .right-side { background-color: #f6f7fb; }
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .left-side {
+            background: url('./images/leftbg.png') no-repeat center center;
+            background-size: cover;
+            color: white;
+        }
+
+        .right-side {
+            background-color: #f6f7fb;
+        }
+
         .portal-pill {
             display: inline-flex;
             align-items: center;
@@ -61,8 +83,22 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
             font-size: 0.82rem;
             margin-bottom: 14px;
         }
+
+        .btn-purple {
+            background-color: #6f42c1;
+            color: white;
+            border: none;
+        }
+
+        .btn-purple:hover {
+            background-color: #5a32a3;
+            color: white;
+        }
+
+        .logo-glow {
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+        }
     </style>
-    <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 <div class="container-fluid h-100">
@@ -102,6 +138,6 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
         </div>
     </div>
 </div>
-<script src="js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
